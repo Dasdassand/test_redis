@@ -1,6 +1,6 @@
 package com.example.kafka.parser;
 
-import com.example.kafka.dto.GetCurrency;
+import com.example.kafka.entity.GetCurrency;
 import com.example.kafka.entity.Currency;
 import org.dom4j.DocumentHelper;
 import org.dom4j.io.OutputFormat;

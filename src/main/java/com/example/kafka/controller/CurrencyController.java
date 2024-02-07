@@ -1,12 +1,10 @@
 package com.example.kafka.controller;
 
-import com.example.kafka.dto.GetCurrency;
+import com.example.kafka.entity.Currency;
+import com.example.kafka.entity.GetCurrency;
 import com.example.kafka.service.CurrencyService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 @RestController
@@ -24,5 +22,10 @@ public class CurrencyController {
     @GetMapping("/get")
     public GetCurrency getCurrency() {
         return service.getCurrency();
+    }
+
+    @GetMapping("/{id}")
+    public Currency getCurrencyById(@PathVariable String id) {
+        return service.get(id);
     }
 }
