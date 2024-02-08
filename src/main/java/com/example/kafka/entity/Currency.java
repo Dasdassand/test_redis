@@ -6,17 +6,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.redis.core.RedisHash;
-
-import java.io.Serializable;
+import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Document
-@RedisHash("Currency")
-public class Currency implements Serializable{
+public class Currency{
     @Id
     private String id;
     private int numCode;
@@ -25,4 +22,5 @@ public class Currency implements Serializable{
     private String name;
     private double value;
     private double vunitRate;
+    private LocalDate date;
 }

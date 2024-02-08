@@ -1,12 +1,12 @@
 package com.example.kafka.parser;
 
-import com.example.kafka.entity.GetCurrency;
 import com.example.kafka.entity.Currency;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
@@ -17,7 +17,7 @@ import java.util.List;
 
 @Component
 public class CurrencyParserCB implements CurrencyParser {
-    public GetCurrency parse(String xml) {
+    public List<Currency> parse(String xml) {
         String date = "";
         List<Currency> currencies = new ArrayList<>();
         try {
@@ -28,6 +28,8 @@ public class CurrencyParserCB implements CurrencyParser {
                 date = document.getFirstChild().getAttributes().item(0).getNodeValue();
                 NodeList list = document.getElementsByTagName("Valute");
                 Element element;
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+                LocalDate dateL = LocalDate.parse(date, formatter);
                 for (int valuteIdx = 0; valuteIdx < list.getLength(); valuteIdx++) {
                     element = (Element) list.item(valuteIdx);
                     var currency = Currency.builder()
@@ -38,6 +40,7 @@ public class CurrencyParserCB implements CurrencyParser {
                             .name(element.getElementsByTagName("Name").item(0).getTextContent())
                             .value(Double.parseDouble(element.getElementsByTagName("Value").item(0).getTextContent().replaceAll(",", ".")))
                             .vunitRate(Double.parseDouble(element.getElementsByTagName("VunitRate").item(0).getTextContent().replaceAll(",", ".")))
+                            .date(dateL)
                             .build();
                     currencies.add(currency);
                 }
@@ -45,9 +48,7 @@ public class CurrencyParserCB implements CurrencyParser {
         } catch (Exception exception) {
             exception.printStackTrace();
         }
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-        LocalDate dateL = LocalDate.parse(date, formatter);
-        return new GetCurrency(dateL, currencies);
+        return currencies;
     }
 }
 

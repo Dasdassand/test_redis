@@ -1,51 +1,45 @@
 package com.example.kafka.service;
 
-import com.example.kafka.entity.GetCurrency;
 import com.example.kafka.entity.Currency;
-import com.example.kafka.parser.CurrencyParser;
 import com.example.kafka.repository.CurrencyMongoRepository;
-import com.example.kafka.repository.CurrencyRedisRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
+@CacheConfig(cacheNames = "cur")
 @RequiredArgsConstructor
 public class CurrencyServiceImp implements CurrencyService {
-    private final CurrencyParser parser;
-    private final CurrencyRedisRepository repositoryR;
-    private final CurrencyMongoRepository repositoryM;
+    private final CurrencyMongoRepository repository;
 
     @Override
-    public GetCurrency getCurrency() {
-        var currency = repositoryR.findAll();
-        List<Currency> currencies = new ArrayList<>();
-        currency.forEach(currencies::add);
-        return new GetCurrency(LocalDate.now(), currencies);
+    public void addOrUpdate(List<Currency> currency) {
+        if (currency.equals(getCurrencies())) {
+            return;
+        }
+        currency.forEach(this::add);
+        repository.saveAll(currency);
     }
 
-    @Override
-    public void addCurrency(String xml) {
-        var currencies = parser.parse(xml);
-        repositoryR.saveAll(currencies.getCurrencies());
+    @Deprecated
+    @CachePut(key = "#currency.id")
+    public Currency add(Currency currency) {
+        return currency;
     }
 
+    @Cacheable(key = "#id")
     @Override
-    public Currency get(String id) {
-        repositoryM.saveAll(repositoryR.findAll());
-        var M = repositoryM.findById(id);
-        var R = repositoryR.findById(id);
-        if (R.isEmpty())
-            System.out.println("Rizdez");
-        if (M.isEmpty())
-            System.out.println("Mizdez");
-        if (R.isPresent() && M.isPresent() && R.get().equals(M.get()))
-            return R.get();
-        return null;
+    public Optional<Currency> getCurrency(String id) {
+        return repository.findById(id);
+    }
+
+    @Cacheable
+    @Override
+    public List<Currency> getCurrencies() {
+        return repository.findAll();
     }
 }

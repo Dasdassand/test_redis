@@ -1,7 +1,9 @@
 package com.example.kafka.parser;
 
-import com.example.kafka.entity.GetCurrency;
+import com.example.kafka.entity.Currency;
+
+import java.util.List;
 
 public interface CurrencyParser{
-    GetCurrency parse(String xml);
+    List<Currency> parse(String xml);
 }

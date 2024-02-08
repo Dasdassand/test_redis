@@ -3,5 +3,7 @@ spring:
     redis:
       host: localhost
       port: '6379'
+      repositories:
+        enabled: false
     mongodb:
       database: kafka
