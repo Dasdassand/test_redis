@@ -2,54 +2,53 @@ package com.example.kafka.parser;
 
 import com.example.kafka.entity.GetCurrency;
 import com.example.kafka.entity.Currency;
-import org.dom4j.DocumentHelper;
-import org.dom4j.io.OutputFormat;
-import org.dom4j.io.XMLWriter;
 import org.springframework.stereotype.Component;
-import java.io.StringWriter;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.StringReader;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class CurrencyParserCB implements CurrencyParser {
     public GetCurrency parse(String xml) {
-        Map<String, Currency> currencyMap = new HashMap<>();
-        String[] xmlSplits = prettyPrintByDom4j(xml).split("\n");
-        String id, charCode, name;
-        int numCode, nominal;
-        double value, valueRate;
-        for (int i = 2; i < xmlSplits.length - 8; i += 8) {
-            id = xmlSplits[i].replace("<Valute ID=\"", "").replace("\">", "");
-            numCode = Integer.parseInt(xmlSplits[i + 1].replaceAll("<[^>]*>", "").replaceAll(" ", ""));
-            charCode = xmlSplits[i + 2].replaceAll("<[^>]*>", "").replaceAll(" ", "");
-            nominal = Integer.parseInt(xmlSplits[i + 3].replaceAll("<[^>]*>", "").replaceAll(" ", ""));
-            name = xmlSplits[i + 4].replaceAll("<[^>]*>", "");
-            value = Double.parseDouble(xmlSplits[i + 5].replaceAll("<[^>]*>", "").replaceAll(" ", "").replaceAll(",", "."));
-            valueRate = Double.parseDouble(xmlSplits[i + 5].replaceAll("<[^>]*>", "").replaceAll(" ", "").replaceAll(",", "."));
-            currencyMap.put(name, new Currency(id, numCode, charCode, nominal, name, value, valueRate));
+        String date = "";
+        List<Currency> currencies = new ArrayList<>();
+        try {
+            try (StringReader reader = new StringReader(xml)) {
+                InputSource source = new InputSource(reader);
+                DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+                Document document = builder.parse(source);
+                date = document.getFirstChild().getAttributes().item(0).getNodeValue();
+                NodeList list = document.getElementsByTagName("Valute");
+                Element element;
+                for (int valuteIdx = 0; valuteIdx < list.getLength(); valuteIdx++) {
+                    element = (Element) list.item(valuteIdx);
+                    var currency = Currency.builder()
+                            .id(element.getAttributes().item(0).getNodeValue())
+                            .numCode(Integer.parseInt(element.getElementsByTagName("NumCode").item(0).getTextContent()))
+                            .charCode(element.getElementsByTagName("CharCode").item(0).getTextContent())
+                            .nominal(Integer.parseInt(element.getElementsByTagName("Nominal").item(0).getTextContent()))
+                            .name(element.getElementsByTagName("Name").item(0).getTextContent())
+                            .value(Double.parseDouble(element.getElementsByTagName("Value").item(0).getTextContent().replaceAll(",", ".")))
+                            .vunitRate(Double.parseDouble(element.getElementsByTagName("VunitRate").item(0).getTextContent().replaceAll(",", ".")))
+                            .build();
+                    currencies.add(currency);
+                }
+            }
+        } catch (Exception exception) {
+            exception.printStackTrace();
         }
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-        LocalDate date = LocalDate.parse(xmlSplits[1]
-                .replaceAll(".*Date=\"(.*?)\".*", "$1").replaceAll(" ", ""), formatter);
-        return new GetCurrency(date, currencyMap);
-    }
-
-    private String prettyPrintByDom4j(String xmlString) {
-        try {
-            OutputFormat format = OutputFormat.createPrettyPrint();
-            format.setIndentSize(1);
-            format.setSuppressDeclaration(true);
-            format.setEncoding("windows-1251");
-
-            org.dom4j.Document document = DocumentHelper.parseText(xmlString);
-            StringWriter sw = new StringWriter();
-            XMLWriter writer = new XMLWriter(sw, format);
-            writer.write(document);
-            return sw.toString();
-        } catch (Exception e) {
-            throw new RuntimeException("Error occurs when pretty-printing xml:\n" + xmlString, e);
-        }
+        LocalDate dateL = LocalDate.parse(date, formatter);
+        return new GetCurrency(dateL, currencies);
     }
 }
+
+

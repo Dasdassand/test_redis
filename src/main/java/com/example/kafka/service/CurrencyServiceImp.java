@@ -9,7 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -22,15 +24,15 @@ public class CurrencyServiceImp implements CurrencyService {
     @Override
     public GetCurrency getCurrency() {
         var currency = repositoryR.findAll();
-        Map<String, Currency> map = new HashMap<>();
-        currency.forEach(obj -> map.put(obj.getCharCode(), obj));
-        return new GetCurrency(LocalDate.now(), map);
+        List<Currency> currencies = new ArrayList<>();
+        currency.forEach(currencies::add);
+        return new GetCurrency(LocalDate.now(), currencies);
     }
 
     @Override
     public void addCurrency(String xml) {
         var currencies = parser.parse(xml);
-        repositoryR.saveAll(currencies.getCurrencyMap().values());
+        repositoryR.saveAll(currencies.getCurrencies());
     }
 
     @Override

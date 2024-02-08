@@ -1,6 +1,7 @@
 package com.example.kafka.entity;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
@@ -12,6 +13,7 @@ import java.io.Serializable;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Document
 @RedisHash("Currency")
 public class Currency implements Serializable{
@@ -22,5 +24,5 @@ public class Currency implements Serializable{
     private int nominal;
     private String name;
     private double value;
-    private double valueRate;
+    private double vunitRate;
 }
