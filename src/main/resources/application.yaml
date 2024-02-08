@@ -7,3 +7,5 @@ spring:
         enabled: false
     mongodb:
       database: kafka
+server:
+  port: 8090

@@ -7,7 +7,6 @@ import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-
 import java.util.*;
 
 @Service
@@ -22,22 +21,23 @@ public class CurrencyServiceImp implements CurrencyService {
             return;
         }
         currency.forEach(this::add);
-        repository.saveAll(currency);
+
     }
 
-    @Deprecated
-    @CachePut(key = "#currency.id")
+
+    @CachePut(value = "cur", key = "#currency.id")
     public Currency add(Currency currency) {
-        return currency;
+        System.out.println("id:" + currency.getId());
+        return repository.save(currency);
     }
 
-    @Cacheable(key = "#id")
+    @Cacheable(value = "cur",key = "#id")
     @Override
     public Optional<Currency> getCurrency(String id) {
         return repository.findById(id);
     }
 
-    @Cacheable
+    @Cacheable(value = "cur")
     @Override
     public List<Currency> getCurrencies() {
         return repository.findAll();
