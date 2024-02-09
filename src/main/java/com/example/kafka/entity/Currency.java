@@ -15,7 +15,6 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Builder
 @Document
-@RedisHash("currency")
 public class Currency implements Serializable{
     @Id
     private String id;

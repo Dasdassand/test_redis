@@ -4,40 +4,40 @@ import com.example.kafka.entity.Currency;
 import com.example.kafka.repository.CurrencyMongoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.stereotype.Service;
+
 import java.util.*;
 
 @Service
-@CacheConfig(cacheNames = "cur")
 @RequiredArgsConstructor
+@CacheConfig(cacheNames = "cur")
 public class CurrencyServiceImp implements CurrencyService {
     private final CurrencyMongoRepository repository;
+    private final RedisCacheManager manager;
 
     @Override
     public void addOrUpdate(List<Currency> currency) {
         if (currency.equals(getCurrencies())) {
             return;
         }
-        currency.forEach(this::add);
-
+        currency.forEach(this::addToCache);
+        repository.saveAll(currency);
     }
 
 
-    @CachePut(value = "cur", key = "#currency.id")
-    public Currency add(Currency currency) {
-        System.out.println("id:" + currency.getId());
-        return repository.save(currency);
+    private void addToCache(Currency currency) {
+        Objects.requireNonNull(manager.getCache("cur")).put(currency.getId(), currency);
     }
 
-    @Cacheable(value = "cur",key = "#id")
+    @Cacheable(key = "#a0")
     @Override
     public Optional<Currency> getCurrency(String id) {
         return repository.findById(id);
     }
 
-    @Cacheable(value = "cur")
+    @Cacheable
     @Override
     public List<Currency> getCurrencies() {
         return repository.findAll();
